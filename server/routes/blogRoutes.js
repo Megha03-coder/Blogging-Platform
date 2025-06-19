@@ -1,0 +1,52 @@
+const express = require('express');
+const router = express.Router();
+const Blog = require('../models/Blog');
+const authMiddleware = require('../middleware/authMiddleware');
+
+// Create blog
+router.post('/', authMiddleware, async (req, res) => {
+  try {
+    const newBlog = new Blog({
+      ...req.body,
+      author: req.user.userId
+    });
+    const savedBlog = await newBlog.save();
+    res.status(201).json(savedBlog);
+  } catch (err) {
+    res.status(500).json({ msg: 'Blog creation failed', error: err.message });
+  }
+});
+
+// Get all blogs
+router.get('/', async (req, res) => {
+  const blogs = await Blog.find().populate('author', 'username').sort({ createdAt: -1 });
+  res.json(blogs);
+});
+
+// Get single blog
+router.get('/:id', async (req, res) => {
+  const blog = await Blog.findById(req.params.id).populate('author', 'username');
+  res.json(blog);
+});
+
+// Update blog
+router.put('/:id', authMiddleware, async (req, res) => {
+  const blog = await Blog.findById(req.params.id);
+  if (blog.author.toString() !== req.user.userId) {
+    return res.status(403).json({ msg: "Not authorized" });
+  }
+  const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  res.json(updatedBlog);
+});
+
+// Delete blog
+router.delete('/:id', authMiddleware, async (req, res) => {
+  const blog = await Blog.findById(req.params.id);
+  if (blog.author.toString() !== req.user.userId) {
+    return res.status(403).json({ msg: "Not authorized" });
+  }
+  await blog.remove();
+  res.json({ msg: 'Blog deleted' });
+});
+
+module.exports = router;
