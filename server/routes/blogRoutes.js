@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Blog = require('../models/Blog');
 const authMiddleware = require('../middleware/authMiddleware');
+const adminMiddleware = require('../middleware/adminMiddleware');
 
 // Create blog
 router.post('/', authMiddleware, async (req, res) => {
@@ -40,7 +41,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
 });
 
 // Delete blog
-router.delete('/:id', authMiddleware, async (req, res) => {
+router.delete('/:id', authMiddleware,adminMiddleware, async (req, res) => {
   const blog = await Blog.findById(req.params.id);
   if (blog.author.toString() !== req.user.userId) {
     return res.status(403).json({ msg: "Not authorized" });
