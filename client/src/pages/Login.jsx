@@ -21,10 +21,11 @@ export default function Login() {
 
       if (res.data.token) {
         localStorage.setItem('token', res.data.token);
-      }
+      
 
       alert("Login successful");
-      navigate('/dashboard'); // ✅ or use window.location.href = '/dashboard';
+      navigate('/dashboard');
+      } // ✅ or use window.location.href = '/dashboard';
     } catch (err) {
       console.error("❌ Login failed:", err.response?.data || err.message);
       alert(err.response?.data?.msg || "Login failed");

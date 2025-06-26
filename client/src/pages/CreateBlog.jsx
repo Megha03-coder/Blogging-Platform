@@ -1,79 +1,90 @@
 
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import image from '../assets/image.png'; // Ensure this path is correct
 
 export default function CreateBlog() {
-  const location = useLocation();
-  const navigate = useNavigate();
-
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  // Load template if passed via location.state
-  useEffect(() => {
-    if (location.state?.template) {
-      setTitle(location.state.template.title);
-      setContent(location.state.template.content);
-    }
-  }, [location]);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
 
-  const handleSubmit = async () => {
-    const token = localStorage.getItem('token');
     try {
-      const res = await axios.post(
+      const token = localStorage.getItem('token');
+
+      const response = await axios.post(
         'http://localhost:5000/api/blogs',
         { title, content },
         {
           headers: {
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      alert('✅ Blog posted!');
+
+      console.log("✅ Blog posted:", response.data);
+      alert("🎉 Blog posted successfully!");
       navigate('/my-blogs');
     } catch (err) {
-      console.error(err);
-      alert('Error posting blog');
+      console.error("❌ Error posting blog:", err);
+      setError(err.response?.data?.msg || "Something went wrong.");
     }
   };
 
-  const modules = {
-    toolbar: [
-      [{ header: [1, 2, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      ['blockquote', 'code-block'],
-      [{ list: 'ordered' }, { list: 'bullet' }],
-      ['link', 'image'],
-      ['clean'],
-    ],
-  };
-
   return (
-    <div className="max-w-4xl mx-auto p-8">
-      <h2 className="text-3xl font-bold mb-6 text-center text-purple-700">📝 Write a New Blog</h2>
-      <input
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="Blog Title"
-        className="w-full border border-gray-300 p-2 rounded mb-4"
-      />
-      <ReactQuill
-        theme="snow"
-        value={content}
-        onChange={setContent}
-        modules={modules}
-        className="mb-6"
-        placeholder="Start writing your blog..."
-      />
-      <button
-        onClick={handleSubmit}
-        className="bg-purple-600 text-white py-2 px-6 rounded hover:bg-purple-700"
-      >
-        Post Blog
-      </button>
+    <div className="min-h-screen bg-gradient-to-br from-pink-100 to-purple-200 p-4 md:p-10">
+      <div className="w-full max-w-7xl mx-auto bg-white shadow-2xl rounded-xl grid md:grid-cols-2 gap-6 p-6 md:p-10">
+        
+        {/* Left: Image */}
+        <div className="flex items-center justify-center">
+          <img
+            src={image}
+            alt="Blog illustration"
+            className="w-full max-w-sm rounded-lg shadow-lg"
+          />
+        </div>
+
+        {/* Right: Blog Form */}
+        <form onSubmit={handleSubmit} className="space-y-4 w-full">
+          <h2 className="text-3xl font-bold text-purple-700 text-center mb-4">
+            📝 Write a New Blog
+          </h2>
+
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
+          <input
+            type="text"
+            placeholder="Blog Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+            className="w-full p-3 border border-gray-300 rounded-md"
+          />
+
+          <ReactQuill
+            theme="snow"
+            value={content}
+            onChange={setContent}
+            placeholder="Start writing your blog..."
+            className="bg-white h-[250px] mb-2"
+          />
+
+          <button
+            type="submit"
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+          >
+            🚀 Post Blog
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

@@ -13,22 +13,28 @@ function App() {
     <Router>
       <Navbar />
       <Routes>
-        {/* Redirect root path to login */}
+        
         <Route path="/" element={<Navigate to="/login" />} />
 
-        {/* Auth Routes */}
+        
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Protected/User Pages */}
+      
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/create-blog" element={<CreateBlog />} />
         <Route path="/my-blogs" element={<MyBlogs />} />
-<Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin" element={<AdminDashboard />} />
 
-
-        {/* Fallback for undefined routes */}
-        <Route path="*" element={<div className="text-center mt-10 text-xl text-red-500">404 - Page Not Found</div>} />
+        {/* Fallback */}
+        <Route
+          path="*"
+          element={
+            <div className="text-center mt-10 text-xl text-red-500">
+              404 - Page Not Found
+            </div>
+          }
+        />
       </Routes>
     </Router>
   );
