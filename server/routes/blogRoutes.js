@@ -17,6 +17,23 @@ router.post('/', authMiddleware, async (req, res) => {
     res.status(500).json({ msg: 'Blog creation failed', error: err.message });
   }
 });
+router.post('/', authMiddleware, async (req, res) => {
+  const { title, content } = req.body;
+
+  try {
+    const newBlog = new Blog({
+      title,
+      content,
+      author: req.user.id,
+    });
+
+    await newBlog.save();
+    res.status(201).json(newBlog);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error while posting blog' });
+  }
+});
 
 // Get all blogs
 router.get('/', async (req, res) => {
