@@ -21,10 +21,10 @@ export default function CreateBlog() {
     }
   }, [location]);
 
-  // Preview image when user selects one
+  // Generate preview when user selects image
   useEffect(() => {
     if (!image) {
-      setPreview('');
+      setPreview('https://source.unsplash.com/400x300/?blog,writing');
       return;
     }
 
@@ -37,14 +37,16 @@ export default function CreateBlog() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    if (!title || !content) return alert('Please fill in all fields');
+    if (!title || !content) {
+      alert('Please fill in all fields');
+      return;
+    }
 
     const newBlog = {
       title,
       content,
-      image: preview || 'https://via.placeholder.com/400x300.png?text=Blog+Image',
-      createdAt: new Date().toISOString(),
+      image: preview,
+      createdAt: new Date().toISOString()
     };
 
     const existing = JSON.parse(localStorage.getItem('blogs') || '[]');
@@ -65,22 +67,18 @@ export default function CreateBlog() {
         {/* Blog Image Preview */}
         <div className="flex flex-col items-center justify-center">
           <motion.img
-            src={preview ? preview : 'https://via.placeholder.com/400x300.png?text=Blog+Preview'}
-            alt="Blog Preview"
-            className="w-full max-w-sm h-64 object-cover rounded-lg shadow mb-4"
+            
+        
+            className="w-full max-w-sm h-60 object-cover rounded-lg shadow mb-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           />
-          <p className="text-center text-gray-600">
-            Upload a custom image or use the default
-          </p>
+          <p className="text-center text-gray-600">Upload a custom image</p>
         </div>
 
         {/* Blog Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <h2 className="text-3xl font-bold text-purple-700 flex items-center gap-2">
-            📝 Create a New Blog
-          </h2>
+          <h2 className="text-3xl font-bold text-purple-700 flex items-center gap-2">📝 Create a New Blog</h2>
 
           <input
             type="text"
