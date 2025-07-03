@@ -1,50 +1,59 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const navigate = useNavigate();
 
-  const handleChange = e => {
+  const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("🔍 Login form submitted", form);
-
-    try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', form);
-
-      console.log("✅ Login success:", res.data);
-
-      if (res.data.token) {
-        localStorage.setItem('token', res.data.token);
-      
-
-      alert("Login successful");
-      navigate('/dashboard');
-      } // ✅ or use window.location.href = '/dashboard';
-    } catch (err) {
-      console.error("❌ Login failed:", err.response?.data || err.message);
-      alert(err.response?.data?.msg || "Login failed");
-    }
+    console.log("Login submitted:", form);
+    // Simulate login
+    alert('Login successful!');
+    navigate('/dashboard'); // Change if dashboard route differs
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-200 to-purple-300">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md space-y-4">
-        <h2 className="text-2xl font-bold text-center text-purple-700">Welcome Back!</h2>
-        <input name="email" placeholder="Email" onChange={handleChange}
-          className="w-full p-2 border border-gray-300 rounded-md" />
-        <input name="password" type="password" placeholder="Password" onChange={handleChange}
-          className="w-full p-2 border border-gray-300 rounded-md" />
-        <button type="submit"
-          className="w-full bg-purple-600 text-white p-2 rounded-md hover:bg-purple-700 transition">
-          Login
-        </button>
-      </form>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 to-indigo-200">
+      <motion.div 
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6 }}
+        className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md"
+      >
+        <h2 className="text-3xl font-bold text-purple-700 mb-6 text-center">Welcome Back!</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            name="email"
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={handleChange}
+            required
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400"
+          />
+          <input
+            name="password"
+            type="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            required
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400"
+          />
+          <button
+            type="submit"
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-md transition"
+          >
+            Login
+          </button>
+        </form>
+      </motion.div>
     </div>
   );
 }
