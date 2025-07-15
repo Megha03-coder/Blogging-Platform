@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import CreateBlog from './pages/CreateBlog';
 import MyBlog from './pages/MyBlog';
+import AdminPanel from './pages/AdminPanel';
 export default function App() {
   return (
     <Router>
@@ -15,6 +16,7 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/create-blog" element={<CreateBlog  />}  />
           <Route path="/My-Blogs" element={<MyBlog  />}    />
+          <Route path="/admin"  element={<AdminPanel />}   />
       </Routes>
     </Router>
   );

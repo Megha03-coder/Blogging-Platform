@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 export default function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-200 to-pink-100">
-      {/* Navbar */}
+    
       <nav className="bg-white shadow px-6 py-4 flex justify-between items-center">
         <h1 className="text-2xl font-bold text-purple-700">Blogging Platform</h1>
         <div className="space-x-4">
@@ -14,7 +14,7 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      
       <div className="flex flex-col items-center justify-center text-center py-32 px-4">
         <motion.h2
           className="text-5xl font-extrabold text-purple-800 mb-6"
