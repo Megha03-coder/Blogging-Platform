@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 export default function Register() {
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'user' });
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -53,6 +53,15 @@ export default function Register() {
             required
             className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400"
           />
+          <select
+            name="role"
+            value={form.role}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400"
+          >
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
           <button
             type="submit"
             className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-md transition"

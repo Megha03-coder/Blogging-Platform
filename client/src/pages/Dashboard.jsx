@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { PencilLine, Plus, Notebook, Users } from 'lucide-react';
+import { PencilLine, Plus, Notebook, Users, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getTokenPayload } from '../utils/auth';
-import { LogOut } from 'lucide-react'; // add this
-
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -33,8 +31,27 @@ export default function Dashboard() {
           limit: 6,
         },
       });
-      setBlogs(prev => [...prev, ...res.data.blogs]);
-      setHasMore(res.data.blogs.length > 0);
+      const blogsData = res.data.blogs || [];
+
+      // Get blogs from localStorage
+      const localBlogs = JSON.parse(localStorage.getItem('blogs') || '[]');
+
+      // Merge local blogs with fetched blogs, avoiding duplicates by _id or title
+      const mergedBlogs = [...blogsData];
+
+      localBlogs.forEach(localBlog => {
+        const exists = mergedBlogs.some(blog => blog._id === localBlog._id || blog.title === localBlog.title);
+        if (!exists) {
+          // Assign a temporary _id if missing
+          if (!localBlog._id) {
+            localBlog._id = `local-${Date.now()}-${Math.random()}`;
+          }
+          mergedBlogs.push(localBlog);
+        }
+      });
+
+      setBlogs(mergedBlogs);
+      setHasMore(mergedBlogs.length > 0);
     } catch (err) {
       console.error("Error fetching blogs:", err.message);
     }
@@ -54,10 +71,6 @@ export default function Dashboard() {
     setPage(1);
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
-
-  
-  const myBlogs = blogs.filter(blog => blog.author._id === user?.id);
-  const allBlogs = blogs;
 
   const templates = [
     { title: "Tech Review", content: "<p>Tech overview...</p>" },
@@ -79,7 +92,7 @@ export default function Dashboard() {
         ✨ Welcome to Your Dashboard
       </motion.h2>
 
-      {/* Action Cards */}
+      {/* Top Buttons */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-5xl mx-auto mb-12">
         <motion.div whileHover={{ scale: 1.05 }} className="bg-white p-6 rounded-xl shadow-md text-center cursor-pointer" onClick={() => navigate('/create-blog')}>
           <Plus className="text-purple-600 mx-auto" />
@@ -94,24 +107,24 @@ export default function Dashboard() {
         <motion.div whileHover={{ scale: 1.05 }} className="bg-white p-6 rounded-xl shadow-md text-center cursor-pointer" onClick={() => navigate('/admin')}>
           <Users className="text-purple-600 mx-auto" />
           <p className="mt-2 font-semibold">Admin Panel</p>
-          
         </motion.div>
       </div>
+
+      {/* Logout */}
       <div className="absolute top-4 right-6">
-  <button
-    onClick={() => {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    }}
-    className="flex items-center gap-2 text-red-600 hover:text-red-800 font-semibold"
-  >
-    <LogOut size={18} />
-    Logout
-  </button>
-</div>
+        <button
+          onClick={() => {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+          }}
+          className="flex items-center gap-2 text-red-600 hover:text-red-800 font-semibold"
+        >
+          <LogOut size={18} />
+          Logout
+        </button>
+      </div>
 
-
-      {/* Templates */}
+      {/* Blog Templates */}
       <div className="text-center mb-10">
         <h3 className="text-2xl font-semibold text-purple-800 mb-4">🧩 Blog Templates</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-6xl mx-auto">
@@ -157,36 +170,12 @@ export default function Dashboard() {
         </select>
       </div>
 
-      {/* My Blogs Section */}
-      {user && (
-        <>
-          <h3 className="text-xl font-bold text-purple-700 mb-4">📌 My Blogs</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-10">
-            {myBlogs.length === 0 ? (
-              <p className="text-gray-600 text-center col-span-full">You haven’t posted any blogs yet.</p>
-            ) : myBlogs.map(blog => (
-              <div key={blog._id} className="bg-white p-4 rounded-lg shadow-md">
-                <img src={blog.image} alt={blog.title} className="w-full h-40 object-cover rounded-md mb-3" />
-                <h4 className="text-lg font-bold mb-1">{blog.title}</h4>
-                <p className="text-sm text-gray-500 mb-2">{blog.type}</p>
-                <button
-                  className="text-purple-600 font-medium hover:underline"
-                  onClick={() => navigate(`/view-blog/${blog._id}`)}
-                >
-                  View
-                </button>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
       {/* All Blogs Section */}
-      <h3 className="text-xl font-bold text-purple-700 mb-4">📰 All Blogs</h3>
+      <h3 className="text-xl font-bold text-purple-700 mb-4">📰 Blogs</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {allBlogs.length === 0 ? (
+        {(blogs?.length || 0) === 0 ? (
           <p className="text-center text-gray-600 col-span-full">No blogs found.</p>
-        ) : allBlogs.map(blog => (
+        ) : blogs.map(blog => (
           <div key={blog._id} className="bg-white p-4 rounded-lg shadow-md">
             <img src={blog.image} alt={blog.title} className="w-full h-40 object-cover rounded-md mb-3" />
             <h4 className="text-lg font-bold mb-1">{blog.title}</h4>
@@ -201,8 +190,6 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
-
-      
     </div>
   );
 }

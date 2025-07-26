@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaWhatsapp, FaInstagram, FaEnvelope, FaHeart, FaLaughSquint, FaSurprise } from 'react-icons/fa';
 import { BiCommentDetail, BiShareAlt, BiTrash } from 'react-icons/bi';
+import { getTokenPayload } from '../utils/auth';
 
 export default function MyBlogs() {
   const [blogs, setBlogs] = useState([]);
@@ -9,29 +10,71 @@ export default function MyBlogs() {
   const [showShare, setShowShare] = useState(null);
   const [commentInputs, setCommentInputs] = useState({});
   const [reactions, setReactions] = useState({});
+  const [comments, setComments] = useState({}); // store comments per blog
+  const user = getTokenPayload();
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem('blogs') || '[]');
-    setBlogs(stored);
-  }, []);
+    // Fetch blogs from backend API
+    fetch('/api/blogs')
+      .then(res => res.json())
+      .then(data => {
+        // Filter blogs by logged-in user
+        const filtered = data.filter(blog => blog.author?._id === (user?.id || user?._id));
+        setBlogs(filtered);
+      })
+      .catch(err => console.error('Failed to fetch blogs:', err));
+  }, [user]);
 
-  const handleDelete = (index) => {
-    const updated = blogs.filter((_, i) => i !== index);
-    setBlogs(updated);
-    localStorage.setItem('blogs', JSON.stringify(updated));
+  useEffect(() => {
+    // Fetch comments for each blog
+    blogs.forEach(blog => {
+      fetch(`/api/comments/${blog._id}`)
+        .then(res => res.json())
+        .then(data => {
+          setComments(prev => ({ ...prev, [blog._id]: data }));
+        })
+        .catch(err => console.error('Failed to fetch comments:', err));
+    });
+  }, [blogs]);
+
+  const handleDelete = (blogId) => {
+    fetch(`/api/blogs/${blogId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+      .then(res => {
+        if (res.ok) {
+          setBlogs(blogs.filter(blog => blog._id !== blogId));
+        } else {
+          console.error('Failed to delete blog');
+        }
+      })
+      .catch(err => console.error('Error deleting blog:', err));
   };
 
-  const handleCommentSubmit = (index) => {
-    const input = commentInputs[index];
+  const handleCommentSubmit = (blogId) => {
+    const input = commentInputs[blogId];
     if (!input) return;
 
-    const updated = [...blogs];
-    if (!updated[index].comments) updated[index].comments = [];
-    updated[index].comments.push({ text: input, timestamp: new Date() });
-
-    setBlogs(updated);
-    setCommentInputs({ ...commentInputs, [index]: '' });
-    localStorage.setItem('blogs', JSON.stringify(updated));
+    fetch('/api/comments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({ blogId, text: input })
+    })
+      .then(res => res.json())
+      .then(newComment => {
+        setComments(prev => ({
+          ...prev,
+          [blogId]: [...(prev[blogId] || []), newComment]
+        }));
+        setCommentInputs({ ...commentInputs, [blogId]: '' });
+      })
+      .catch(err => console.error('Failed to post comment:', err));
   };
 
   const handleReaction = (index, emoji) => {
@@ -47,7 +90,7 @@ export default function MyBlogs() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
         {blogs.map((blog, index) => (
           <motion.div
-            key={index}
+            key={blog._id}
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white p-6 rounded-xl shadow-md"
@@ -93,7 +136,7 @@ export default function MyBlogs() {
               </button>
 
               <button
-                onClick={() => handleDelete(index)}
+                onClick={() => handleDelete(blog._id)}
                 className="text-sm bg-red-100 text-red-600 px-4 py-1 rounded-md flex items-center gap-2"
               >
                 <BiTrash /> Delete
@@ -110,9 +153,9 @@ export default function MyBlogs() {
                 <p className="text-sm font-semibold mb-2">💬 Add a comment</p>
                 <input
                   type="text"
-                  value={commentInputs[index] || ''}
+                  value={commentInputs[blog._id] || ''}
                   onChange={(e) =>
-                    setCommentInputs({ ...commentInputs, [index]: e.target.value })
+                    setCommentInputs({ ...commentInputs, [blog._id]: e.target.value })
                   }
                   placeholder="Write your comment..."
                   className="w-full border px-3 py-2 rounded-md mb-2"
@@ -122,7 +165,7 @@ export default function MyBlogs() {
                   {["Awesome!", "Loved this ❤️", "Great content!", "🔥🔥", "So relatable!"].map((c, i) => (
                     <button
                       key={i}
-                      onClick={() => setCommentInputs({ ...commentInputs, [index]: c })}
+                      onClick={() => setCommentInputs({ ...commentInputs, [blog._id]: c })}
                       className="bg-gray-100 px-3 py-1 rounded hover:bg-gray-200"
                     >
                       {c}
@@ -130,7 +173,7 @@ export default function MyBlogs() {
                   ))}
                 </div>
                 <button
-                  onClick={() => handleCommentSubmit(index)}
+                  onClick={() => handleCommentSubmit(blog._id)}
                   className="bg-purple-600 text-white px-4 py-1 rounded-md hover:bg-purple-700"
                 >
                   Post Comment
@@ -138,9 +181,9 @@ export default function MyBlogs() {
 
                 {/* Comment Thread */}
                 <div className="mt-4">
-                  {blog.comments?.map((c, i) => (
+                  {comments[blog._id]?.map((c, i) => (
                     <div key={i} className="border-t pt-2 text-sm text-gray-700">
-                      🗨️ {c.text} <span className="text-xs text-gray-400 ml-2">({new Date(c.timestamp).toLocaleString()})</span>
+                      🗨️ {c.text} <span className="text-xs text-gray-400 ml-2">({new Date(c.createdAt).toLocaleString()})</span>
                     </div>
                   ))}
                 </div>

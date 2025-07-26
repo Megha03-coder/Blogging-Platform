@@ -1,0 +1,32 @@
+const res = await axios.get('/api/blogs');
+    setBlogs(res.data.blogs);
+  };
+=======
+  const fetchBlogs = async () => {
+    const res = await axios.get('/api/blogs');
+    setBlogs(res.data);
+  };
+>>>>>>> REPLACE
+
+<<<<<<< SEARCH
+  const deleteUser = async (id) => {
+    await axios.delete(`http://localhost:5000/api/users/${id}`);
+    fetchUsers();
+  };
+=======
+  const deleteUser = async (id) => {
+    await axios.delete(`/api/users/${id}`);
+    fetchUsers();
+  };
+>>>>>>> REPLACE
+
+<<<<<<< SEARCH
+  const deleteBlog = async (id) => {
+    await axios.delete(`http://localhost:5000/api/blogs/${id}`);
+    fetchBlogs();
+  };
+=======
+  const deleteBlog = async (id) => {
+    await axios.delete(`/api/blogs/${id}`);
+    fetchBlogs();
+  };

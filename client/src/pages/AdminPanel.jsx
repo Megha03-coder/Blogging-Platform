@@ -7,6 +7,7 @@ export default function AdminPanel() {
   const user = getTokenPayload();
   const [users, setUsers] = useState([]);
   const [blogs, setBlogs] = useState([]);
+  const [activeTab, setActiveTab] = useState('users');
 
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -22,7 +23,7 @@ export default function AdminPanel() {
 
   const fetchBlogs = async () => {
     const res = await axios.get('http://localhost:5000/api/blogs');
-    setBlogs(res.data.blogs);
+    setBlogs(res.data);
   };
 
   const deleteUser = async (id) => {
@@ -43,47 +44,64 @@ export default function AdminPanel() {
     <div className="p-6 min-h-screen bg-gradient-to-br from-yellow-100 to-orange-100">
       <h2 className="text-3xl font-bold text-orange-700 mb-6 text-center">🔐 Admin Panel</h2>
 
-      {/* Users Section */}
-      <section className="mb-10">
-        <h3 className="text-xl font-bold text-gray-700 mb-3">👥 All Users</h3>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {users.map((u) => (
-            <div key={u._id} className="bg-white p-4 rounded shadow">
-              <p><strong>Name:</strong> {u.name}</p>
-              <p><strong>Email:</strong> {u.email}</p>
-              <p><strong>Role:</strong> {u.role}</p>
-              <div className="flex gap-3 mt-3">
-                <button onClick={() => deleteUser(u._id)} className="text-red-600 flex items-center gap-1">
-                  <Trash2 size={16} /> Delete
-                </button>
-                {u.role !== 'admin' && (
-                  <button className="text-green-600 flex items-center gap-1">
-                    <ShieldCheck size={16} /> Promote
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <div className="flex justify-center mb-6 space-x-4">
+        <button
+          className={`px-4 py-2 rounded ${activeTab === 'users' ? 'bg-orange-500 text-white' : 'bg-white text-orange-700'}`}
+          onClick={() => setActiveTab('users')}
+        >
+          Users
+        </button>
+        <button
+          className={`px-4 py-2 rounded ${activeTab === 'blogs' ? 'bg-orange-500 text-white' : 'bg-white text-orange-700'}`}
+          onClick={() => setActiveTab('blogs')}
+        >
+          Uploads
+        </button>
+      </div>
 
-      {/* Blogs Section */}
-      <section>
-        <h3 className="text-xl font-bold text-gray-700 mb-3">📝 All Blogs</h3>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {blogs.map((b) => (
-            <div key={b._id} className="bg-white p-4 rounded shadow">
-              <p><strong>Title:</strong> {b.title}</p>
-              <p><strong>Author:</strong> {b.author?.name}</p>
-              <div className="mt-3">
-                <button onClick={() => deleteBlog(b._id)} className="text-red-600 flex items-center gap-1">
-                  <Trash2 size={16} /> Delete Blog
-                </button>
+      {activeTab === 'users' && (
+        <section className="mb-10">
+          <h3 className="text-xl font-bold text-gray-700 mb-3">👥 All Users</h3>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {users.map((u) => (
+              <div key={u._id} className="bg-white p-4 rounded shadow">
+                <p><strong>Name:</strong> {u.name}</p>
+                <p><strong>Email:</strong> {u.email}</p>
+                <p><strong>Role:</strong> {u.role}</p>
+                <div className="flex gap-3 mt-3">
+                  <button onClick={() => deleteUser(u._id)} className="text-red-600 flex items-center gap-1">
+                    <Trash2 size={16} /> Delete
+                  </button>
+                  {u.role !== 'admin' && (
+                    <button className="text-green-600 flex items-center gap-1">
+                      <ShieldCheck size={16} /> Promote
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {activeTab === 'blogs' && (
+        <section>
+          <h3 className="text-xl font-bold text-gray-700 mb-3">📝 All Blogs</h3>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {blogs.map((b) => (
+              <div key={b._id} className="bg-white p-4 rounded shadow">
+                <p><strong>Title:</strong> {b.title}</p>
+                <p><strong>Author:</strong> {b.author?.name}</p>
+                <div className="mt-3">
+                  <button onClick={() => deleteBlog(b._id)} className="text-red-600 flex items-center gap-1">
+                    <Trash2 size={16} /> Delete Blog
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

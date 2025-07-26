@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { setToken } from '../utils/auth';
 
 export default function Login() {
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ email: '', password: '', role: 'user' });
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -13,9 +14,24 @@ export default function Login() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Login submitted:", form);
-    // Simulate login
+    // Simulate login by storing a dummy token with role info
+    const dummyTokenPayload = {
+      userId: 'dummyId',
+      role: form.role,
+      username: form.email,
+      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // 1 day expiry
+    };
+    // Base64 encode the payload as a fake JWT token (header.payload.signature)
+    const base64Payload = btoa(JSON.stringify(dummyTokenPayload));
+    const dummyToken = `header.${base64Payload}.signature`;
+    setToken(dummyToken);
+
     alert('Login successful!');
-    navigate('/dashboard'); // Change if dashboard route differs
+    if (form.role === 'admin') {
+      navigate('/admin');
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   return (
@@ -46,6 +62,15 @@ export default function Login() {
             required
             className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400"
           />
+          <select
+            name="role"
+            value={form.role}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400"
+          >
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
           <button
             type="submit"
             className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-md transition"

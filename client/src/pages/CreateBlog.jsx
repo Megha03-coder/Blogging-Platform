@@ -2,17 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ReactQuill from 'react-quill';
 import { motion } from 'framer-motion';
+import { getTokenPayload } from '../utils/auth';
 import 'react-quill/dist/quill.snow.css';
 
 export default function CreateBlog() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [image, setImage] = useState(null);
-  const [preview, setPreview] = useState('');
+  const [preview, setPreview] = useState('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80');
   const navigate = useNavigate();
   const location = useLocation();
+  const user = getTokenPayload();
 
-  // Load template if redirected from dashboard
   useEffect(() => {
     if (location.state?.template) {
       const { title, content } = location.state.template;
@@ -21,19 +22,20 @@ export default function CreateBlog() {
     }
   }, [location]);
 
-  // Generate preview when user selects image
   useEffect(() => {
-    if (!image) {
+    if (!image && !preview) {
       setPreview('https://source.unsplash.com/400x300/?blog,writing');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreview(reader.result);
-    };
-    reader.readAsDataURL(image);
-  }, [image]);
+    if (image) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result);
+      };
+      reader.readAsDataURL(image);
+    }
+  }, [image, preview]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -46,7 +48,8 @@ export default function CreateBlog() {
       title,
       content,
       image: preview,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      author: user ? { id: user.id || user._id, name: user.name || user.username || user.email } : null
     };
 
     const existing = JSON.parse(localStorage.getItem('blogs') || '[]');
@@ -54,7 +57,7 @@ export default function CreateBlog() {
     localStorage.setItem('blogs', JSON.stringify(existing));
 
     alert('✅ Blog published!');
-    navigate('/my-blogs');
+    navigate('/dashboard');
   };
 
   return (
@@ -64,19 +67,17 @@ export default function CreateBlog() {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-6xl mx-auto bg-white rounded-xl shadow-lg p-8 grid grid-cols-1 md:grid-cols-2 gap-6"
       >
-        {/* Blog Image Preview */}
         <div className="flex flex-col items-center justify-center">
           <motion.img
-            
-        
-            className="w-full max-w-sm h-60 object-cover rounded-lg shadow mb-4"
+            src={preview}
+            alt="Blog preview"
+            style={{ width: '100%', maxWidth: '400px', height: '240px', objectFit: 'cover' }}
+            className="rounded-lg shadow mb-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           />
-          <p className="text-center text-gray-600">Upload a custom image</p>
         </div>
 
-        {/* Blog Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <h2 className="text-3xl font-bold text-purple-700 flex items-center gap-2">📝 Create a New Blog</h2>
 
